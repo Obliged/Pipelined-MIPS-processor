@@ -15,7 +15,7 @@ architecture behaviour of tb_ALU is
 
   --Outputs
   signal ALUresult : std_logic_vector(DATA_WIDTH-1 downto 0);
-  signal zero : std_logic;
+  
   
 begin  -- behaviour
 ALU: entity work.ALU port map(
@@ -23,8 +23,7 @@ ALU: entity work.ALU port map(
   rs      => rs, 
   rt      => rt,
   
-  ALUresult => ALUresult,
-  zero      => zero);
+  ALUresult => ALUresult);
 
 stim_proc: process
  -----------------------------------------------------------------------------
@@ -64,19 +63,19 @@ stim_proc: process
   begin
     rs <= std_logic_vector(to_signed(rs_data, DATA_WIDTH));
     rt <= std_logic_vector(to_signed(rt_data, DATA_WIDTH));    
-    ALUctrl <= "111";
+    ALUctrl <= "011";
     wait for 1 ns;          
 
     assert ((ALUresult = x"00000000") and (rs_data >= rt_data))
       or   ((ALUresult = x"00000001") and (rs_data < rt_data))
       report "SLT: Expected value at ALUresult not found." severity error;
 
-    ALUctrl <= "011";
-    wait for 1 ns;
+    --ALUctrl <= "111";
+    --wait for 1 ns;
     
-    assert ((ALUresult = x"00000000") and (rs_data >= rt_data))
-      or   ((ALUresult = x"00000001") and (rs_data < rt_data))
-      report "SLT: Expected value at ALUresult not found." severity error;
+    --assert ((ALUresult = x"00000000") and (rs_data >= rt_data))
+    --  or   ((ALUresult = x"00000001") and (rs_data < rt_data))
+    --  report "SLT: Expected value at ALUresult not found." severity error;
 
   end checkSLT;
     
@@ -93,11 +92,11 @@ stim_proc: process
     
     assert ALUresult = (rs or rt) report "OR: Expected value at ALUresult not found." severity error;
 
-    ALUctrl <= "101";
-    wait for 1 ns;
+    --ALUctrl <= "101";
+    --wait for 1 ns;
 
     
-    assert ALUresult = (rs or rt) report "OR: Expected value at ALUresult not found." severity error;
+    --assert ALUresult = (rs or rt) report "OR: Expected value at ALUresult not found." severity error;
                
   end checkOR;
 -------------------------------------------------------------------------------
@@ -113,10 +112,10 @@ stim_proc: process
 
     assert ALUresult = (rs AND rt) report "AND: Expected value at ALUresult not found." severity error;
 
-    ALUctrl <= "100";
-    wait for 1 ns;
+    --ALUctrl <= "100";
+    --wait for 1 ns;
     
-    assert ALUresult = (rs AND rt) report "AND: Expected value at ALUresult not found." severity error;
+    --assert ALUresult = (rs AND rt) report "AND: Expected value at ALUresult not found." severity error;
                
   end checkAND;
 -------------------------------------------------------------------------------
@@ -145,6 +144,16 @@ stim_proc: process
    checkValue(integer'low, integer'high);
    checkValue(0, integer'low); 
    checkValue(integer'low, 0);
+
+   --'Stuck at'-testing
+   checkValue(-1431655766, 0);
+   checkValue(1431655765, 0);
+   checkValue(0, -1431655766);
+   checkValue(0, 1431655765);
+   checkValue(-1431655766, -1431655766);
+   checkValue(1431655765, -1431655766);
+   checkValue(-1431655766, 1431655765);
+   checkValue(1431655765, 1431655765);
    
    --exhaustive testing of expected behaviour
    --for rs_data in integer'low to integer'high loop 
@@ -153,6 +162,7 @@ stim_proc: process
    --  end loop;  -- rt_data
    --end loop;  -- rs_data
 
+   assert false report "Finished tb_ALU" severity note;
    wait;
  end process;
   

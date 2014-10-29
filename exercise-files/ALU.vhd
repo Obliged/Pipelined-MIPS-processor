@@ -15,19 +15,6 @@ entity ALU is
     ALUresult : out std_logic_vector(DATA_WIDTH-1 downto 0)
     );
 
--------------------------------------------------------------------------------
-  --From synopsis std_logic_misc package.
-  function OR_REDUCE(ARG: STD_LOGIC_VECTOR) return UX01 is
-    variable result: STD_LOGIC;
-  begin
-    result := '0';
-    for i in ARG'range loop
-      result := result or ARG(i);
-    end loop;
-    return result;
-  end;
--------------------------------------------------------------------------------
- 
 end ALU;
 
 architecture behavioral of ALU is
@@ -35,23 +22,29 @@ architecture behavioral of ALU is
 signal SLTout : std_logic_vector(DATA_WIDTH-1 downto 0);  -- Output of SLT
 signal SUBout : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ADDout : std_logic_vector(DATA_WIDTH-1 downto 0);
-
+signal addsub : std_logic_vector(DATA_WIDTH-1 downto 0);
 
 begin  -- behavioural
 
-  ADDout <= signed(rs) - signed(rt);
-  SUBout <= signed(rs) - signed(rt);
+  
+  ADDout <= std_logic_vector(signed(rs) + signed(rt));
+  SUBout <= std_logic_vector(signed(rs) - signed(rt));
   SLTout <= x"00000001" when (signed(rs) < signed(rt)) else x"00000000";
   --zero <= not or_reduce(ADDout);  --or ADDout supported in VHDL2008
   
 --Output Mux
-  with ALUctrl select
+  with ALUctrl(1 downto 0) select
     ALUresult <=
-    rt and rs     when "000",
-    rt or rs      when "001",
-    SLTout        when "011",
-    ADDout        when "010",
-    SUBout        when "110",
+    rt and rs     when "00",
+    rt or rs      when "01",
+    SLTout        when "11",
+    addsub        when "10",
+    (others => '0') when others;
+
+  with ALUctrl(2) select
+    addsub <=
+    ADDout        when '0',
+    SUBout        when '1',
     (others => '0') when others;
 
 end behavioral;
