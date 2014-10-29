@@ -18,7 +18,7 @@ entity branch_control is
     addr_in  : in  std_logic_vector(IADDR_WIDTH-1 downto 0); -- Instruction addr + 1
     addr_out : out std_logic_vector(IADDR_WIDTH-1 downto 0);    -- Branch address
     branch_mux : out std_logic
-    );
+    ); 
 
   -------------------------------------------------------------------------------
   --From synopsis std_logic_misc package.
@@ -41,7 +41,8 @@ signal equal : std_logic;               --Asserted if rt == rs
   
 begin  -- behavioral
 
-  equal <= NOT or_reduce(rt_in XOR rs_in);
+  equal <= '1' when (signed(rt_in) = signed(rs_in)) else '0';
+  --equal <= NOT or_reduce(rt_in XOR rs_in);
   branch_mux <= equal AND ctrl_branch;
 
   addr_out <= std_logic_vector(signed(addr_in) + signed(imm_in));
