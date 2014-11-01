@@ -171,9 +171,9 @@ with forward_a select
 --ALU rs input MUX
 with forward_b select
   rs <=
-  id_ex_register_rt 	when "00",
-  ex_mem_register_rt 	when "10",
-  mem_wb_register_rt	when "01",
+  id_ex_register_rs 	when "00",
+  ex_mem_register_rs 	when "10",
+  mem_wb_register_rs	when "01",
   (others => 'X') 		when others;
   
 -- Branch or PC+1 MUX
