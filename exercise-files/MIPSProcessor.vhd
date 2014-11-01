@@ -123,7 +123,36 @@ begin
          );
 
   -----------------------------------------------------------------------------
-
+ --instantiate Forwarding Unit
+  forward_unit : entity work.forwarding_unit
+    generic map (
+    DATA_WIDTH => DATA_WIDTH)           
+    port map (
+		ex_mem_reg_write	=> ex_mem_reg_write,
+		mem_wb_reg_write	=> mem_wb_reg_write,
+		ex_mem_register_rd	=> ex_mem_register_rd,
+		mem_wb_register_rd	=> mem_wb_register_rd,
+		id_ex_register_rs	=> id_ex_register_rs,
+		id_ex_register_rt	=> id_ex_register_rt,
+		forward_a			=> forward_a,
+		forward_b    		=> forward_b
+		);
+  -----------------------------------------------------------------------------
+ --instantiate Hazard Detection Unit
+  hazard_detection : entity work.hazard_detection_unit
+    generic map (
+    DATA_WIDTH => DATA_WIDTH)           
+    port map (
+		clk     			=> clk,
+		rst     			=> reset,
+		id_ex_mem_read		=> id_ex_mem_read,
+		id_ex_register_rt	=> id_ex_register_rt,
+		if_id_register_rs	=> if_id_register_rs,
+		if_id_register_rt	=> if_id_register_rt,
+		stall				=> stall
+		);
+  -----------------------------------------------------------------------------
+  
 --Write-register-MUX
  with Reg_Dst select
    rd_addr <=
@@ -132,11 +161,20 @@ begin
    (others => 'X') when others;
 
 --ALU rt input MUX
-with ALU_Src select
+with forward_a select
   rt <=
-  (x"0000") & imem_data_in(15 downto 0) when '1',
-  rt_read                               when '0',
+  id_ex_register_rt 	when "00",
+  ex_mem_register_rt 	when "10",
+  mem_wb_register_rt	when "01",
   (others => 'X') when others;
+  
+--ALU rs input MUX
+with forward_b select
+  rs <=
+  id_ex_register_rt 	when "00",
+  ex_mem_register_rt 	when "10",
+  mem_wb_register_rt	when "01",
+  (others => 'X') 		when others;
   
 -- Branch or PC+1 MUX
 with (Branch and zero) select
