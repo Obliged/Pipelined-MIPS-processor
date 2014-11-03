@@ -6,15 +6,13 @@ entity instruction_decoder is
   
   generic (
     INST_WIDTH : natural := 32
-    OPCODE_WIDth: natural := 6
     );
 
   port (
-    instruction : in std_logic_vector(INST_WIDTH-1 downto 0);
-    wb_instr : out std_logic_vector(1 downto 0);  --MemtoReg, RegWrite
-    m_instr : out std_logic;            -- Memory write enable
-    ex_instr : out std_logic_vector(4 downto 0);  -- ALUop, RegDst, imm_or_rt
-    if_flush : out std_logic
+    instruction : in  std_logic_vector(INST_WIDTH-1 downto 0);
+    wb_instr    : out std_logic_vector(1 downto 0);  --MemtoReg, RegWrite
+    mem_instr     : out std_logic_vector(1 downto 0);  --Memory write enable, Imm_to_reg
+    ex_instr    : out std_logic_vector(4 downto 0)  -- ALUop, RegDst, imm_or_rt
     );
 end instruction_decoder;
 
@@ -26,25 +24,46 @@ architecture Behavioral of instruction_decoder is
   constant OPCODE_SW	        : std_logic_vector(5 downto 0) := "101011";
   constant OPCODE_J	        : std_logic_vector(5 downto 0) := "000010";
   constant OPCODE_LUI	        : std_logic_vector(5 downto 0) := "001111";
+--We assume that LUI uses rs = 0. Thus the imm can "travel" through the ALU.
+                                                                            
   
   signal ALU_ctrl : std_logic_vector(2 downto 0);
-  signal MemtoReg : std_logic;          --Asserted when LW.
   signal opcode : std_logic_vector(5 downto 0);  -- opcode part of instruction
-
+  signal ex_mux : std_logic_vector(1 downto 0);  -- [RegDst, imm_or_rt]
+  
 begin  -- Behavioral
 -------------------------------------------------------------------------------
-  ALU: entity ALU_ctrl(Behavioral)
+  ALU: entity work.ALU_Ctrl(Behavioral)
     port map(
-      ALU_op  => opcode(5;       --0 => R-type, 1 => LW. Should be
-                                        --expanded if functionality is expanded. 
-      funct   => instruction(5 downto 0);
-      ALU_Out => ALU_ctrl;
+      ALU_op  => opcode(5),       --0 => R-type, 1 => LW/SW, X => others.
+                                  --Should be expanded if functionality
+                                  --is expanded. 
+      funct   => instruction(5 downto 0),
+      ALU_Out => ALU_ctrl
       );
 -------------------------------------------------------------------------------
 
-  m_instr <= instruction(29);           --only SW => 10_1_011.
-  with
-  MemtoReg
-  
-    
+  with opcode select
+    mem_instr <=                         --[Memory write enable, Imm_to_reg]
+    "10" when OPCODE_SW,
+    "01" when OPCODE_LUI,
+    "00" when others;
+
+  with opcode select                    --Assuming synth will optimize.
+wb_instr <=                             --[MemtoReg, RegWrite]
+  "11" when OPCODE_LW,
+  "01" when OPCODE_R_TYPE,
+  "01" when OPCODE_LUI,
+  "00" when others;
+
+with opcode select
+  ex_mux <=                             -- [RegDst, imm_or_rt]
+  "11" when OPCODE_LUI,                 --OPCODE_I_TYPE
+  "11" when OPCODE_LW,                    
+  "11" when OPCODE_SW,
+  "00" when OPCODE_R_TYPE,
+  "00" when others;
+
+ ex_instr <= ALU_ctrl & ex_mux;
+ opcode <= instruction(INST_WIDTH-1 downto INST_WIDTH-6);
 end Behavioral;

@@ -38,4 +38,4 @@ begin
           funct_sel 	        when '0', 
           "010" 		when '1', 
           "000" 		when others; 
-end Behavioraloral;
+end Behavioral;
