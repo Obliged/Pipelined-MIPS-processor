@@ -126,7 +126,7 @@ begin
  --instantiate Forwarding Unit
   forward_unit : entity work.forwarding_unit
     generic map (
-    DATA_WIDTH => DATA_WIDTH)           
+    ADDR_WIDTH => ADDR_WIDTH)           
     port map (
 		ex_mem_reg_write	=> ex_mem_reg_write,
 		mem_wb_reg_write	=> mem_wb_reg_write,
@@ -141,7 +141,7 @@ begin
  --instantiate Hazard Detection Unit
   hazard_detection : entity work.hazard_detection_unit
     generic map (
-    DATA_WIDTH => DATA_WIDTH)           
+    ADDR_WIDTH => ADDR_WIDTH)           
     port map (
 		clk     			=> clk,
 		rst     			=> reset,
