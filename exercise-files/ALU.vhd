@@ -19,7 +19,7 @@ end ALU;
 
 architecture behavioral of ALU is
 
-signal SLTout : std_logic_vector(DATA_WIDTH-1 downto 0);  -- Output of SLT
+signal SLTout : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal SUBout : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal ADDout : std_logic_vector(DATA_WIDTH-1 downto 0);
 signal addsub : std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -41,7 +41,8 @@ begin  -- behavioural
     addsub        when "10",
     (others => '0') when others;
 
-  with ALUctrl(2) select
+  with ALUctrl(2) select    --Explicitly defining two full muxes due to
+                            --unexpected synthesis when defining a 5-input mux.
     addsub <=
     ADDout        when '0',
     SUBout        when '1',
