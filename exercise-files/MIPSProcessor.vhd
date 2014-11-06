@@ -130,7 +130,7 @@ begin
 
 -----------------------------------------------------------------------------
   --instantiate pipeline register IF/ID
-	if_id: entity work.if_id_register(behavioral)
+	if_id: entity work.if_id(behavioral)
 	generic map (
 	INST_WIDTH => INST_WIDTH,
     ADDR_WIDTH => ADDR_WIDTH
@@ -144,7 +144,7 @@ begin
 	
 -----------------------------------------------------------------------------
   --instantiate pipeline register ID/EX
-	id_ex: entity work.id_ex_register(behavioral)
+	id_ex: entity work.id_ex(Behavioral)
 	generic map (
 	ADDR_WIDTH => ADDR_WIDTH,
     DATA_WIDTH => DATA_WIDTH,
@@ -156,7 +156,7 @@ begin
 		rt_addr_in			=> if_id_instruction(26 downto 21),
 		rt_addr_in			=> if_id_instruction(20 downto 16),
 		rd_addr_in			=> if_id_instruction(15 downto 11),
-		sign_ext_imm_in		=> std_logic_vector(resize(signed(if_id_instruction(15 downto 0)), sign_ext_imm_in'length),
+		sign_ext_imm_in		=> std_logic_vector(resize(signed(if_id_instruction(15 downto 0)), sign_ext_imm_in'length)),
 		rs_read_out			=> id_ex_rs_read,
 		rt_read_out			=> id_ex_rt_read,
 		rs_addr_out			=> id_ex_rs_addr,
@@ -167,7 +167,7 @@ begin
 	
 -----------------------------------------------------------------------------
   --instantiate pipeline register EX/MEM
-	ex_mem: entity work.ex_mem_register(behavioral)
+	ex_mem_registers: entity work.ex_mem(Behavioral)
 	generic map (
 	ADDR_WIDTH => ADDR_WIDTH,
     DATA_WIDTH => DATA_WIDTH,
@@ -185,7 +185,7 @@ begin
 	
 -----------------------------------------------------------------------------
   --instantiate pipeline register MEM/WB
-	mem_wb: entity work.mem_wb_register(behavioral)
+	mem_wb_registers: entity work.mem_wb(Behavioral)
 	generic map (
 	DATA_WIDTH => DATA_WIDTH,
 	REG_ADDR_WIDTH => REG_ADDR_WIDTH
@@ -236,7 +236,7 @@ begin
     IMM_WIDTH	=> IMM_WIDTH,          -- Width of immidiate
     IADDR_WIDTH	=> IADDR_WIDTH)
 	port map (
-		ctrl_branch => ,
+		ctrl_branch => IF_ID_Branch,
 		imm_in		=> id_ex_sign_ext_imm(IMM_WIDTH-1 downto 0),
 		rs_in		=> rs_read,
 		rt_in		=> rt_read,
@@ -350,7 +350,7 @@ with EX_MEM_ImmtoReg select
   --Dmem and PC
   dmem_write_enable <= EX_MEM_MemWrite;
   dmem_address <= ex_mem_ALU_result(ADDR_WIDTH-1 downto 0);  --Size of dmem is small.
-  PC_incremented = std_logic_vector(signed(PC_out) + 1);
+  PC_incremented <= std_logic_vector(signed(PC_out) + 1);
   jump_addr <= imem_data_in(ADDR_WIDTH-1 downto 0); -- & PC_out(31 downto 26);
                                                     -- --Address space is
                                                     -- smaller than imm    

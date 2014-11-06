@@ -16,7 +16,7 @@ entity id_ex is
 		rs_addr_out		: out std_logic_vector(REG_ADDR_WIDTH-1 downto 0);
 		rt_addr_out		: out std_logic_vector(REG_ADDR_WIDTH-1 downto 0);
 		rd_addr_out		: out std_logic_vector(REG_ADDR_WIDTH-1 downto 0);
-		sign_ext_imm_out: out std_logic_vector(DATA_WIDTH-1 downto 0);
+		sign_ext_imm_out: out std_logic_vector(DATA_WIDTH-1 downto 0)
 		);	
 end id_ex;
 architecture Behavioral of id_ex is

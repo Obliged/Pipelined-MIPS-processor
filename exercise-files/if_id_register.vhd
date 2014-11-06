@@ -1,5 +1,5 @@
 entity if_id is  
-	generic (INST_WIDTH : natural := 32
+	generic (INST_WIDTH : natural := 32;
 			 ADDR_WIDTH : natural := 8
 			 );
 	port(clk			: in std_logic;
