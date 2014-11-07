@@ -29,13 +29,14 @@ architecture Behavioral of instruction_decoder is
   constant IFUNCT_ADDI          : std_logic_vector(5 downto 0) := "00" & x"8";
   constant IFUNCT_ANDI          : std_logic_vector(5 downto 0) := "00" & x"C";
   constant IFUNCT_ORI           : std_logic_vector(5 downto 0) := "00" & x"D";
-  constant IFUNCT_SLTI          : std_logic_vector(5 downto 0) := "00" & x"A";
-
-                                                                            
-  
+  constant IFUNCT_SLTI          : std_logic_vector(5 downto 0) := "00" & x"A";                                                                       
   signal ALU_ctrl	: std_logic_vector(2 downto 0);
   signal opcode		: std_logic_vector(5 downto 0);  -- opcode part of instruction
   signal ex_mux		: std_logic_vector(1 downto 0);  -- [RegDst, imm_or_rt]
+  signal opcode_is_i_type  : std_logic;  -- Asserted when inctruction is I-type.
+  signal opcode_is_r_type  : std_logic;  -- Asserted when inctruction is I-type.
+  signal MemtoReg       : std_logic;
+  signal RegWrite       : std_logic;
   
 begin  -- Behavioral
 -------------------------------------------------------------------------------
@@ -48,40 +49,58 @@ begin  -- Behavioral
 -------------------------------------------------------------------------------
 
   with opcode select
-    mem_instr <=        --[Memory write enable, Memory write enable, Imm_to_reg]
+    mem_instr <=        --[Memory read enable, Memory write enable, Imm_to_reg]
     "100" when OPCODE_LW,
     "010" when OPCODE_SW,
     "001" when OPCODE_LUI,
     "000" when others;
 
-  with opcode select                    
-    wb_instr <=       --[MemtoReg, RegWrite]
-    "11" when OPCODE_LW,
-    "01" when OPCODE_R_TYPE,
-    "01" when OPCODE_LUI,
-    "00" when others;
-  
   with opcode select
     id_instr <=     --[Branch, Jump]
     "01" when OPCODE_J,
     "10" when OPCODE_BEQ,
     "00" when others;
 
-  with opcode select
-    ex_mux <=              -- [RegDst, imm_or_rt]
-    -- OPCODE_I_TYPE
-    "11" when OPCODE_LUI,  
-    "11" when OPCODE_LW,                    
-    "11" when OPCODE_SW,
-    "11" when IFUNCT_ADDI,
-    "11" when IFUNCT_ANDI,
-    "11" when IFUNCT_ORI ,
-    "11" when IFUNCT_SLTI,
-    -- OPCODE_R_TYPE
-    "00" when OPCODE_R_TYPE,
-    --"XX" OPCODE_J_TYPE
-    "00" when others;
+  
+  --with opcode select                    
+  --  wb_instr <=       --[MemtoReg, RegWrite]
+  --  --write from mem to Reg
+  --  "11" when OPCODE_LW,
+  --  --Write from ALU to Reg
+  --  "01" when OPCODE_R_TYPE,
+  --  "01" when OPCODE_LUI,
+  --  "01" when IFUNCT_ADDI,
+  --  "01" when IFUNCT_ANDI,
+  --  "01" when IFUNCT_ORI ,
+  --  "01" when IFUNCT_SLTI,
+  --  --Don't write reg
+  --  "00" when others;
+  MemtoReg <= '1' when opcode = OPCODE_LW else '0';
+  RegWrite <= '1' when ((opcode_is_i_type or opcode_is_r_type) = '1') else '0';
+  wb_instr <= (MemtoReg, RegWrite);
 
- ex_instr <= ALU_ctrl & ex_mux;
- opcode <= instruction(INST_WIDTH-1 downto INST_WIDTH-6);
+
+ -- with opcode_i_type select
+ --  ex_mux <=              -- [RegDst, imm_or_rt]
+ --   "11" when '1',
+ --   "00" when others;
+  opcode_is_i_type <= '0' when
+                   (((opcode(5) nor opcode(3)) nor opcode(2))  --None of these
+                   and ((opcode(4) or opcode(1))  --And at least one of these
+                   or (opcode_is_r_type))) = '1' --or none of them
+                   else '1';
+  
+  opcode_is_r_type <= '1' when opcode = OPCODE_R_TYPE else '0';
+    
+  ex_instr <= ALU_ctrl & (opcode_is_i_type, opcode_is_i_type);
+  opcode <= instruction(INST_WIDTH-1 downto INST_WIDTH-6);
 end Behavioral;
+
+
+-- 000000
+-- 010000
+-- 010001
+-- 010010
+-- 010011
+-- 000011
+-- 000010
