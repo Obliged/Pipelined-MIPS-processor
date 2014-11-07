@@ -75,17 +75,17 @@ ARCHITECTURE behavior OF tb_control IS
 
 	TYPE table IS ARRAY (1 TO 9) OF data_table;
 
-	CONSTANT templates: table := (
+CONSTANT templates: table := (
 	 -- OPCODE	 FUNCT	 ALU_out 
-		("100011","000000", "0010", '0', '1', '1', '1', '1', '0', '0', '0'), -- LW, second col dontcare.
-		("101011","000000", "0010", '0', '1', '0', '0', '0', '1', '0', '0'), -- SW, second col dontcare.
-		("000100","000000", "0110", '0', '0', '0', '0', '0', '0', '1', '0'), -- BEQ, second col dontcare.
-		("000000","100000", "0010", '1', '0', '0', '1', '0', '0', '0', '0'), -- ADD
-		("000000","100010", "0110", '1', '0', '0', '1', '0', '0', '0', '0'), -- SUB 
-		("000000","100100", "0000", '1', '0', '0', '1', '0', '0', '0', '0'), -- AND 
-		("000000","100101", "0001", '1', '0', '0', '1', '0', '0', '0', '0'), -- OR 
-		("000000","101010", "0111", '1', '0', '0', '1', '0', '0', '0', '0'), -- SLT 
-		("000010","000000", "0000", '0', '0', '0', '0', '0', '0', '0', '1'));	-- J, second & third col dontcare.
+("100011","000000", "0010", '0', '1', '1', '1', '1', '0', '0', '0'), -- LW, second col dontcare.
+("101011","000000", "0010", '0', '1', '0', '0', '0', '1', '0', '0'), -- SW, second col dontcare.
+("000100","000000", "0110", '0', '0', '0', '0', '0', '0', '1', '0'), -- BEQ, second col dontcare.
+("000000","100000", "0010", '1', '0', '0', '1', '0', '0', '0', '0'), -- ADD
+("000000","100010", "0110", '1', '0', '0', '1', '0', '0', '0', '0'), -- SUB 
+("000000","100100", "0000", '1', '0', '0', '1', '0', '0', '0', '0'), -- AND 
+("000000","100101", "0001", '1', '0', '0', '1', '0', '0', '0', '0'), -- OR 
+("000000","101010", "0111", '1', '0', '0', '1', '0', '0', '0', '0'), -- SLT 
+("000010","000000", "0000", '0', '0', '0', '0', '0', '0', '0', '1'));	-- J, second & third col dontcare.
 	 
 BEGIN
  
@@ -122,119 +122,119 @@ BEGIN
    -- Stimulus process
    stim_proc: process
    begin
-		rst <= '1';
-      wait for clk_period;	-- hold reset state for 1 clk period.
-		rst <= '0';
-		wait for clk_period;
-		proc_enable <= '1';
-		FOR i IN 1 to 2 LOOP  -- Test LW and SW instructions
-			opcode 	<=	templates(i).opcode_col;
-			funct	<=	templates(i).funct_col;
-			WAIT FOR 0.5 * clk_period;
-			WAIT UNTIL rising_edge(clk);
-			ASSERT ALU_Out=templates(i).ALU_Out_col
-				REPORT "Mismatch in ALU_out at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Reg_Dst=templates(i).Reg_Dst_col
-				REPORT "Mismatch in Reg_Dst at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT ALU_Src=templates(i).ALU_Src_col
-				REPORT "Mismatch in ALU_Src at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_To_Reg=templates(i).Mem_To_Reg_col
-				REPORT "Mismatch in Mem_To_Reg at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Reg_Write=templates(i).Reg_Write_col
-				REPORT "Mismatch in Reg_Write at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_Read=templates(i).Mem_Read_col
-				REPORT "Mismatch in Mem_Read at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_Write=templates(i).Mem_Write_col
-				REPORT "Mismatch in Mem_Write at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Branch=templates(i).Branch_col
-				REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Jump=templates(i).Jump_col
-				REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			WAIT FOR 2 * clk_period;
-		END LOOP;
-		FOR i IN 3 to table'LENGTH-1 LOOP -- Test R-type and BEQ instructions
-			opcode 	<=	templates(i).opcode_col;
-			funct	<=	templates(i).funct_col;
-			WAIT FOR 0.5 * clk_period;
-			WAIT UNTIL rising_edge(clk);
-			ASSERT ALU_Out=templates(i).ALU_Out_col
-				REPORT "Mismatch in ALU_out at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Reg_Dst=templates(i).Reg_Dst_col
-				REPORT "Mismatch in Reg_Dst at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT ALU_Src=templates(i).ALU_Src_col
-				REPORT "Mismatch in ALU_Src at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_To_Reg=templates(i).Mem_To_Reg_col
-				REPORT "Mismatch in Mem_To_Reg at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Reg_Write=templates(i).Reg_Write_col
-				REPORT "Mismatch in Reg_Write at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_Read=templates(i).Mem_Read_col
-				REPORT "Mismatch in Mem_Read at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_Write=templates(i).Mem_Write_col
-				REPORT "Mismatch in Mem_Write at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Branch=templates(i).Branch_col
-				REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Jump=templates(i).Jump_col
-				REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			WAIT FOR 1 * clk_period;
-		END LOOP;
-		FOR i IN table'LENGTH to table'LENGTH LOOP  -- Test Jump instruction
-			opcode 	<=	templates(i).opcode_col;
-			funct	<=	templates(i).funct_col;
-			WAIT FOR 0.5 * clk_period;
-			ASSERT ALU_Out=templates(i).ALU_Out_col
-				REPORT "Mismatch in ALU_out at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Reg_Dst=templates(i).Reg_Dst_col
-				REPORT "Mismatch in Reg_Dst at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT ALU_Src=templates(i).ALU_Src_col
-				REPORT "Mismatch in ALU_Src at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_To_Reg=templates(i).Mem_To_Reg_col
-				REPORT "Mismatch in Mem_To_Reg at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Reg_Write=templates(i).Reg_Write_col
-				REPORT "Mismatch in Reg_Write at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_Read=templates(i).Mem_Read_col
-				REPORT "Mismatch in Mem_Read at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Mem_Write=templates(i).Mem_Write_col
-				REPORT "Mismatch in Mem_Write at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Branch=templates(i).Branch_col
-				REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-			ASSERT Jump=templates(i).Jump_col
-				REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
-				SEVERITY ERROR;
-		END LOOP;
+     rst <= '1';
+     wait for clk_period;	-- hold reset state for 1 clk period.
+     rst <= '0';
+     wait for clk_period;
+     proc_enable <= '1';
+     FOR i IN 1 to 2 LOOP  -- Test LW and SW instructions
+       opcode 	<=	templates(i).opcode_col;
+       funct	<=	templates(i).funct_col;
+       WAIT FOR 0.5 * clk_period;
+       WAIT UNTIL rising_edge(clk);
+       ASSERT ALU_Out=templates(i).ALU_Out_col
+         REPORT "Mismatch in ALU_out at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Reg_Dst=templates(i).Reg_Dst_col
+         REPORT "Mismatch in Reg_Dst at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT ALU_Src=templates(i).ALU_Src_col
+         REPORT "Mismatch in ALU_Src at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_To_Reg=templates(i).Mem_To_Reg_col
+         REPORT "Mismatch in Mem_To_Reg at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Reg_Write=templates(i).Reg_Write_col
+         REPORT "Mismatch in Reg_Write at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_Read=templates(i).Mem_Read_col
+         REPORT "Mismatch in Mem_Read at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_Write=templates(i).Mem_Write_col
+         REPORT "Mismatch in Mem_Write at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Branch=templates(i).Branch_col
+         REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Jump=templates(i).Jump_col
+         REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       WAIT FOR 2 * clk_period;
+     END LOOP;
+     FOR i IN 3 to table'LENGTH-1 LOOP -- Test R-type and BEQ instructions
+       opcode 	<=	templates(i).opcode_col;
+       funct	<=	templates(i).funct_col;
+       WAIT FOR 0.5 * clk_period;
+       WAIT UNTIL rising_edge(clk);
+       ASSERT ALU_Out=templates(i).ALU_Out_col
+         REPORT "Mismatch in ALU_out at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Reg_Dst=templates(i).Reg_Dst_col
+         REPORT "Mismatch in Reg_Dst at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT ALU_Src=templates(i).ALU_Src_col
+         REPORT "Mismatch in ALU_Src at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_To_Reg=templates(i).Mem_To_Reg_col
+         REPORT "Mismatch in Mem_To_Reg at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Reg_Write=templates(i).Reg_Write_col
+         REPORT "Mismatch in Reg_Write at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_Read=templates(i).Mem_Read_col
+         REPORT "Mismatch in Mem_Read at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_Write=templates(i).Mem_Write_col
+         REPORT "Mismatch in Mem_Write at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Branch=templates(i).Branch_col
+         REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Jump=templates(i).Jump_col
+         REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       WAIT FOR 1 * clk_period;
+     END LOOP;
+     FOR i IN table'LENGTH to table'LENGTH LOOP  -- Test Jump instruction
+       opcode 	<=	templates(i).opcode_col;
+       funct	<=	templates(i).funct_col;
+       WAIT FOR 0.5 * clk_period;
+       ASSERT ALU_Out=templates(i).ALU_Out_col
+         REPORT "Mismatch in ALU_out at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Reg_Dst=templates(i).Reg_Dst_col
+         REPORT "Mismatch in Reg_Dst at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT ALU_Src=templates(i).ALU_Src_col
+         REPORT "Mismatch in ALU_Src at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_To_Reg=templates(i).Mem_To_Reg_col
+         REPORT "Mismatch in Mem_To_Reg at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Reg_Write=templates(i).Reg_Write_col
+         REPORT "Mismatch in Reg_Write at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_Read=templates(i).Mem_Read_col
+         REPORT "Mismatch in Mem_Read at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Mem_Write=templates(i).Mem_Write_col
+         REPORT "Mismatch in Mem_Write at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Branch=templates(i).Branch_col
+         REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+       ASSERT Jump=templates(i).Jump_col
+         REPORT "Mismatch in Branch at iteration=" & INTEGER'IMAGE(i)
+         SEVERITY ERROR;
+     END LOOP;
 		WAIT UNTIL rising_edge(clk);
-		proc_enable <= '0';
-		ASSERT FALSE
-			REPORT "No error found!"
-			SEVERITY NOTE;
+     proc_enable <= '0';
+     ASSERT FALSE
+       REPORT "No error found!"
+       SEVERITY NOTE;
       -- insert stimulus here 
 
-      wait;
+     wait;
    end process;
 
 END;

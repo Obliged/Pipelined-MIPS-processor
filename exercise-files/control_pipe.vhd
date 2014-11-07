@@ -12,23 +12,23 @@ entity control_pipe is
     rst         	: in std_logic;
     instruction 	: in std_logic_vector(INST_WIDTH-1 downto 0);
 	
-    MEM_WB_MemtoReg : out std_logic;
+    MEM_WB_MemtoReg     : out std_logic;
 	
-	EX_MEM_RegWrite : out std_logic;
-	MEM_WB_RegWrite : out std_logic;
+    EX_MEM_RegWrite     : out std_logic;
+    MEM_WB_RegWrite     : out std_logic;
 	
-    EX_MEM_MemWrite : out std_logic;
+    EX_MEM_MemWrite     : out std_logic;
 	
-	ID_EX_MemRead	: out std_logic;
+    ID_EX_MemRead       : out std_logic;
     
-	IF_ID_Jump		: out std_logic;
-	IF_ID_Branch	: out std_logic;
+    IF_ID_Jump	        : out std_logic;
+    IF_ID_Branch	: out std_logic;
 	
-	ID_EX_ALUop		: out std_logic_vector(2 downto 0);
-    ID_EX_RegDst    : out std_logic;
-    ID_EX_ALUSrc    : out std_logic;
+    ID_EX_ALUop		: out std_logic_vector(2 downto 0);
+    ID_EX_RegDst        : out std_logic;
+    ID_EX_ALUSrc        : out std_logic;
 	
-    EX_MEM_ImmtoReg : out std_logic
+    EX_MEM_ImmtoReg     : out std_logic
     );
 end control_pipe;
 
@@ -49,7 +49,7 @@ signal id_ex_mem_out	: std_logic_vector(2 downto 0); --PARTLY DELAYED:MemRead, M
 
 signal mem_wb_wb_out	: std_logic_vector(1 downto 0); --FULLY DELAYED: MemtoReg, RegWrite        
 signal ex_mem_mem_out	: std_logic_vector(2 downto 0); --FULLY DELAYED: MemRead, MemWrite, ImmtoReg 
-signal if_id_ex_out		: std_logic_vector(4 downto 0); --FULLY DELAYED: ALUop, RegDst, ALUSrc
+signal if_id_ex_out	: std_logic_vector(4 downto 0); --FULLY DELAYED: ALUop, RegDst, ALUSrc
 
 begin  -- Behavioral
 -------------------------------------------------------------------------------
@@ -61,11 +61,11 @@ begin  -- Behavioral
       wb_instr    => if_id_wb_instr ,
       mem_instr   => if_id_mem_instr,
       ex_instr    => if_id_ex_instr ,
-	  id_instr	  => if_id_id_instr	);
+      id_instr	  => if_id_id_instr);
 
 -------------------------------------------------------------------------------
 	IF_ID_Branch <= if_id_id_instr(1);
-	IF_ID_Jump 	 <= if_id_id_instr(0);
+	IF_ID_Jump   <= if_id_id_instr(0);
 	
 -------------------------------------------------------------------------------
  ex_delay: entity work.pipe_delay(behavioural)
