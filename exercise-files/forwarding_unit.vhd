@@ -9,15 +9,15 @@ use IEEE.NUMERIC_STD.ALL;
 entity Forwarding_unit is
 
 	generic (
-		ADDR_WIDTH : natural := 5);
+		REG_ADDR_WIDTH : natural := 5);
 
 	Port(
 		ex_mem_reg_write	: in STD_LOGIC;
 		mem_wb_reg_write	: in STD_LOGIC;
-		ex_mem_register_rd	: in STD_LOGIC_VECTOR (ADDR_WIDTH-1 downto 0);
-		mem_wb_register_rd	: in STD_LOGIC_VECTOR (ADDR_WIDTH-1 downto 0);
-		id_ex_register_rs	: in STD_LOGIC_VECTOR (ADDR_WIDTH-1 downto 0);
-		id_ex_register_rt	: in STD_LOGIC_VECTOR (ADDR_WIDTH-1 downto 0);
+		ex_mem_register_rd	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
+		mem_wb_register_rd	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
+		id_ex_register_rs	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
+		id_ex_register_rt	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
 		forward_a			: out STD_LOGIC_VECTOR (1 downto 0);
 		forward_b			: out STD_LOGIC_VECTOR (1 downto 0)
 		);

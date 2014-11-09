@@ -1,15 +1,16 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+
 entity ex_mem is
 	generic (ADDR_WIDTH 	: natural := 8;
 			REG_ADDR_WIDTH 	: natural := 5;
 			DATA_WIDTH 		: integer := 32
 			);
 	port(clk				: in std_logic;
-		branch_target_in	: in std_logic_vector(ADDR_WIDTH-1 downto 0);
 		ALU_result_in		: in std_logic_vector(DATA_WIDTH-1 downto 0);
 		rt_read_in			: in std_logic_vector(DATA_WIDTH-1 downto 0);
 		rd_addr_in			: in std_logic_vector(REG_ADDR_WIDTH-1 downto 0);
 		
-		branch_target_out	: out std_logic_vector(ADDR_WIDTH-1 downto 0);
 		ALU_result_out		: out std_logic_vector(DATA_WIDTH-1 downto 0);
 		rt_read_out			: out std_logic_vector(DATA_WIDTH-1 downto 0);
 		rd_addr_out			: out std_logic_vector(REG_ADDR_WIDTH-1 downto 0)
@@ -20,9 +21,8 @@ architecture Behavioral of ex_mem is
     process (clk)
       begin
         if (rising_edge(clk)) then
-			branch_target_out	<= branch_target_in;
 			ALU_result_out 		<= ALU_result_in;
-			rd_addr_out 		<= rt_read_in;
+			rt_read_out 		<= rt_read_in;
 			rd_addr_out 		<= rd_addr_in;
         end if;
     end process;

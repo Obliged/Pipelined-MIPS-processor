@@ -1,3 +1,6 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+
 entity id_ex is
 	generic (ADDR_WIDTH 	: natural := 8;
 			REG_ADDR_WIDTH 	: natural := 5;
@@ -24,7 +27,6 @@ architecture Behavioral of id_ex is
     process (clk)
       begin
         if (rising_edge(clk)) then
-			PC_out 				<= PC_in;
 			rs_read_out 		<= rs_read_in;
 			rt_read_out 		<= rt_read_in;
 			rs_addr_out 		<= rs_addr_in;

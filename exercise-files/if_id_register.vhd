@@ -1,3 +1,6 @@
+LIBRARY ieee;
+USE ieee.std_logic_1164.ALL;
+
 entity if_id is  
 	generic (INST_WIDTH : natural := 32;
 			 ADDR_WIDTH : natural := 8
