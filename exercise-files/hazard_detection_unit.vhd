@@ -9,15 +9,15 @@ use IEEE.NUMERIC_STD.ALL;
 entity Hazard_detection_unit is
 
 	generic (
-		ADDR_WIDTH : natural := 32);
+		REG_ADDR_WIDTH : natural := 5);
 
 	Port(
 		clk					: in STD_LOGIC;
 		rst					: in STD_LOGIC;
 		id_ex_mem_read		: in STD_LOGIC;
-		id_ex_register_rt	: in STD_LOGIC_VECTOR (ADDR_WIDTH-1 downto 0);
-		if_id_register_rs	: in STD_LOGIC_VECTOR (ADDR_WIDTH-1 downto 0);
-		if_id_register_rt	: in STD_LOGIC_VECTOR (ADDR_WIDTH-1 downto 0);
+		id_ex_register_rt	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
+		if_id_register_rs	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
+		if_id_register_rt	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
 		stall				: out STD_LOGIC
 		);
 

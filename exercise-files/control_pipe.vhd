@@ -41,10 +41,7 @@ signal if_id_mem_instr  : std_logic_vector(2 downto 0);  --Memory write enable, 
 signal if_id_ex_instr   : std_logic_vector(4 downto 0);  --ALUop, RegDst, ALUSrc
 
 --Delayed signals
-signal ex_mem_wb_instr	: std_logic_vector(1 downto 0);  --Partly DELAYED: MemtoReg, RegWrite
-signal ex_mem_mem_instr	: std_logic_vector(1 downto 0);  --Partly DELAYED: MemRead, MemWrite, ImmtoReg
-signal ex_mem_wb_out	: std_logic_vector(1 downto 0); --PARTLY DELAYED:MemtoReg, RegWrite
-                                                        --
+signal ex_mem_wb_out	: std_logic_vector(1 downto 0); --PARTLY DELAYED:MemtoReg, RegWrite  
 signal id_ex_mem_out	: std_logic_vector(2 downto 0); --PARTLY DELAYED:MemRead, MemWrite, ImmtoReg 
 
 signal mem_wb_wb_out	: std_logic_vector(1 downto 0); --FULLY DELAYED: MemtoReg, RegWrite        
@@ -132,7 +129,6 @@ wb_delay_1: entity work.pipe_delay(behavioural)  --Forwarding needs RegWrite
      pipe_in  => if_id_wb_instr,
      pipe_out => ex_mem_wb_out);
 	 
-  ex_mem_wb_instr <= ex_mem_wb_out;
   EX_MEM_RegWrite <= ex_mem_wb_out(0);
   
 ------------------------------------------------------------------------------  
@@ -143,7 +139,7 @@ wb_delay_2: entity work.pipe_delay(behavioural)
    port map (
      clk      => clk,
      rst      => rst,
-     pipe_in  => ex_mem_wb_instr,
+     pipe_in  => ex_mem_wb_out,
      pipe_out => mem_wb_wb_out);
 	
   MEM_WB_MemtoReg <= mem_wb_wb_out(1);

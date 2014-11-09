@@ -56,12 +56,14 @@ architecture Behavioral of MIPSProcessor is
 	signal ID_EX_MemRead	: std_logic;
 	signal EX_MEM_MemWrite	: std_logic;
 	signal MEM_WB_MemtoReg	: std_logic;
-	signal ID_EX_ALUop		: std_logic_vector(3 downto 0);
+	signal ID_EX_ALUop		: std_logic_vector(2 downto 0);
 	signal ID_EX_ALUSrc		: std_logic;
 	signal EX_MEM_RegWrite	: std_logic;
 	signal MEM_WB_RegWrite	: std_logic;
 	signal EX_MEM_ImmtoReg	: std_logic;
 
+  --Branch control signals
+	signal branch_mux			:std_logic;
 
   --IF/ID out signals
 	signal if_id_instruction	: std_logic_vector(INST_WIDTH-1 downto 0);
@@ -90,10 +92,16 @@ architecture Behavioral of MIPSProcessor is
 	signal forward_a			: std_logic_vector(1 downto 0);
 	signal forward_b			: std_logic_vector(1 downto 0);
 	
+  --Hazard signals
+	signal stall				: std_logic;
+	
   --Internals
 	signal RegDst_mux			: std_logic_vector(REG_ADDR_WIDTH-1 downto 0);
 	signal PC_out				: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Output of PC.
 	signal PC_new				: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
+	signal PC_incremented		: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Output of PC.
+	signal PC_branch			: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
+	signal PC_update			: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
 	signal branch_or_iterate	: std_logic_vector(ADDR_WIDTH-1 downto 0);
 	signal jump_addr			: std_logic_vector(ADDR_WIDTH-1 downto 0);
 	signal ALU_or_dmem			: std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -108,7 +116,7 @@ begin
     port map (
 		rt        => id_ex_rt_read,
 		rs        => id_ex_rs_read,
-		ALUctrl   => ID_EX_ALUop  ,
+		ALUctrl   => ID_EX_ALUop,
 		ALUresult => ALUresult);
 
   -----------------------------------------------------------------------------
@@ -136,6 +144,7 @@ begin
     ADDR_WIDTH => ADDR_WIDTH
     )
 	port map (
+		clk				=> clk,	
 		PC_in			=> PC_incremented,
 		instruction_in	=> imem_data_in,
 		PC_out			=> if_id_pc,
@@ -151,12 +160,13 @@ begin
 	REG_ADDR_WIDTH => REG_ADDR_WIDTH
     )
 	port map (
+		clk					=> clk,	
 		rs_read_in			=> rs_read,
 		rt_read_in			=> rt_read,
-		rt_addr_in			=> if_id_instruction(26 downto 21),
+		rs_addr_in			=> if_id_instruction(25 downto 21),
 		rt_addr_in			=> if_id_instruction(20 downto 16),
 		rd_addr_in			=> if_id_instruction(15 downto 11),
-		sign_ext_imm_in		=> std_logic_vector(resize(signed(if_id_instruction(15 downto 0)), sign_ext_imm_in'length)),
+		sign_ext_imm_in		=> std_logic_vector(resize(signed(if_id_instruction(15 downto 0)), INST_WIDTH)),
 		rs_read_out			=> id_ex_rs_read,
 		rt_read_out			=> id_ex_rt_read,
 		rs_addr_out			=> id_ex_rs_addr,
@@ -174,6 +184,7 @@ begin
 	REG_ADDR_WIDTH => REG_ADDR_WIDTH
     )
 	port map (
+		clk					=> clk,	
 		ALU_result_in		=> ALUresult,
 		rt_read_in			=> id_ex_rt_read,
 		rd_addr_in			=> RegDst_mux,
@@ -191,6 +202,7 @@ begin
 	REG_ADDR_WIDTH => REG_ADDR_WIDTH
     )
 	port map (
+		clk					=> clk,	
 		mem_data_in			=> dmem_data_in,
 		ALU_result_in		=> ex_mem_ALU_result,
 		rd_addr_in			=> ex_mem_rd_addr,
@@ -242,18 +254,18 @@ begin
 		rt_in		=> rt_read,
 		addr_in		=> if_id_pc,
 		addr_out	=> PC_branch,
-		branch_mux	=> branch_or_iterate
+		branch_mux	=> branch_mux
 	);
 	
   -----------------------------------------------------------------------------
  --instantiate Forwarding Unit
   forward_unit : entity work.forwarding_unit
     generic map (
-    ADDR_WIDTH => ADDR_WIDTH)           
+    REG_ADDR_WIDTH => REG_ADDR_WIDTH)           
     port map (
 		ex_mem_reg_write	=> EX_MEM_RegWrite,
 		mem_wb_reg_write	=> MEM_WB_RegWrite,
-		ex_mem_register_rd	=> id_ex_rd_addr,
+		ex_mem_register_rd	=> ex_mem_rd_addr,
 		mem_wb_register_rd	=> mem_wb_rd_addr,
 		id_ex_register_rs	=> id_ex_rs_addr,
 		id_ex_register_rt	=> id_ex_rt_addr,
@@ -264,7 +276,7 @@ begin
  --instantiate Hazard Detection Unit
   hazard_detection : entity work.hazard_detection_unit
     generic map (
-    ADDR_WIDTH => ADDR_WIDTH)           
+    REG_ADDR_WIDTH => REG_ADDR_WIDTH)           
     port map (
 		clk     			=> clk,
 		rst     			=> reset,
@@ -300,7 +312,7 @@ with forward_b select
   (others => 'X')	when others;
   
 -- Branch or PC+1 MUX
-with IF_ID_Branch select
+with branch_mux select
   branch_or_iterate <=
   PC_incremented	when '0',
   PC_branch			when '1',
@@ -337,7 +349,7 @@ with EX_MEM_ImmtoReg select
       imem_address <= (others => '0');
       PC_out <= (others => '0');
     elsif rising_edge(clk) then
-      if processor_enable = '1' and (PC_Update = '1' or jump = '1') then
+      if processor_enable = '1' then
         imem_address <= PC_new;
         PC_out <= PC_new;
       end if;
