@@ -279,8 +279,8 @@ begin
 --Write-register-MUX 
  with ID_EX_RegDst select
    RegDst_mux <=
-   id_ex_rd_addr	when '1',
-   id_ex_rt_addr	when '0',
+   id_ex_rd_addr	when '0',
+   id_ex_rt_addr	when '1',
    (others => 'X')	when others;
 
 --ALU rt input MUX
