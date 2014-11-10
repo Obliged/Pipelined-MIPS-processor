@@ -219,6 +219,8 @@ begin
 	port map (
 		clk         => clk,
 		rst         => reset,
+                stall       => stall,
+                proc_enable => processor_enable,
 		instruction => if_id_instruction,
 		
 		MEM_WB_MemtoReg => MEM_WB_MemtoReg,
@@ -315,7 +317,7 @@ with forward_b select
 with branch_mux select
   branch_or_iterate <=
   PC_incremented	when '0',
-  PC_branch			when '1',
+  PC_branch		when '1',
   --IMM is larger than address-space. Using bottom least significant bits,
   --assuming that most significant bits will be sign extension.
   (others => 'X') when others;

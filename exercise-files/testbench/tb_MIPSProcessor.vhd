@@ -111,7 +111,7 @@ DataMem:			entity work.DualPortMem port map (
 		end WriteInstructionWord;
 		
 		procedure FillInstructionMemory is
-			constant TEST_INSTRS : integer := 30;
+			constant TEST_INSTRS : integer := 43;
 			type InstrData is array (0 to TEST_INSTRS-1) of std_logic_vector(DATA_WIDTH-1 downto 0);
 variable TestInstrData : InstrData := (
   X"8C010001", --lw $1, 1($0)		/$1 =  2	
@@ -141,6 +141,23 @@ variable TestInstrData : InstrData := (
   X"00432825", --or $5, $2, $3		/$5 = 1110 = 14	
   X"AC04000F", --sw $4, 15($0)		/Saving value 8 on address 15	
   X"AC050010", --sw $5, 16($0)		/Saving value 14 (= 0xE) on address 16	
+  
+  --New
+  "100011" & "00000" & "10001" & x"0011", --lw $17, 17($0)	/$17 =  0000AAAA
+  "001111" & "00000" & "10010" & x"0002", --lui $18, 1	        /$18 = 2<<16 =131072
+  "101011" & "10001" & "10010" & x"000B", --sw $17, $18, 2      /M[8+11] = 131072
+  "001000" & "00011" & "10100" & x"5556", --addi $17, $20, 5556 /$20 = 0001FFFE
+  "101011" & "00000" & "10100" & x"0014", --sw $0, $20, 20      /M[20] = 0001FFFE
+  "001101" & "10001" & "10101" & x"5555", --ori $17, $21, 5555  /$21 = 0000FFFF
+  "101011" & "00000" & "10101" & x"0015", --sw $0, $21, 21      /M[21] = 0000FFFF
+  "001100" & "10001" & "10110" & x"55AA", --andi $17, $22, 55AA /$22 = 000000AA 
+  "101011" & "00000" & "10110" & x"0016", --sw $0, $22, 22      /M[22] = 000000AA
+  "001010" & "10001" & "10111" & x"AAAB", --slti $17, $23, AAAB /$23 = 0 ?
+  "101011" & "00000" & "10111" & x"0017", --sw $0, $23, 23      /M[23] = 00000000  
+  "001010" & "10110" & "11000" & x"0AAA", --slti $22, $24, 0AAA /$24 = 1 
+  "101011" & "00000" & "11000" & x"0018", --sw $0, $24, 24      /M[24] = 00000001  
+    
+  --Old
   X"002A5020", --add $10, $1, $10  /add $1 to $ 10 and place in $10
   X"1000FFFF", --beq $0, $0, -1	/Branch back one step to hold off code at this spot
   X"AC050012" --sw $5, 18($0)		/SHOULD NEVER HAPPEN (Saving value 14 (= 0xE) on address 18.)
@@ -167,6 +184,7 @@ variable TestInstrData : InstrData := (
 		begin
 			WriteDataWord(x"00000002", 1);
 			WriteDataWord(x"0000000A", 2);
+                        WriteDataWord(x"0000AAAA", 17);
 		end FillDataMemory;
 		
 		-- helper procedures for checking the contents of data memory after
@@ -202,6 +220,14 @@ variable TestInstrData : InstrData := (
 			CheckDataWord(x"0005FFEE", 13);
 			CheckDataWord(x"00000008", 15);
 			CheckDataWord(x"0000000E", 16);
+
+                        CheckDataWord(x"00020000", 19);
+                        CheckDataWord(x"0001FFFE", 20);
+                        CheckDataWord(x"0000FFFF", 21);
+                        CheckDataWord(x"000000AA", 22); --Inserted error. x"000000AA"
+                        CheckDataWord(x"00000000", 23);
+                        CheckDataWord(x"00000001", 24);
+                        
 		end CheckDataMemory;
 		
    begin

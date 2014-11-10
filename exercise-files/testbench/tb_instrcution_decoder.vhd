@@ -143,7 +143,7 @@ begin  -- behavior
         SEVERITY ERROR;
     END LOOP;
 
-    ASSERT FALSE REPORT "No error found!" SEVERITY NOTE;
+    ASSERT FALSE REPORT "tb_instruction_decoder finished." SEVERITY NOTE;
     
     wait;  
   end process;

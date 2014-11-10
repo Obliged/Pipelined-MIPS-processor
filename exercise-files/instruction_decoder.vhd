@@ -30,13 +30,13 @@ architecture Behavioral of instruction_decoder is
   constant IFUNCT_ANDI          : std_logic_vector(5 downto 0) := "00" & x"C";
   constant IFUNCT_ORI           : std_logic_vector(5 downto 0) := "00" & x"D";
   constant IFUNCT_SLTI          : std_logic_vector(5 downto 0) := "00" & x"A";                                                                       
-  signal ALU_ctrl	: std_logic_vector(2 downto 0);
-  signal opcode		: std_logic_vector(5 downto 0);  -- opcode part of instruction
-  signal ex_mux		: std_logic_vector(1 downto 0);  -- [RegDst, ALUSrc]
-  signal opcode_is_i_type  : std_logic;  -- Asserted when inctruction is I-type.
-  signal opcode_is_r_type  : std_logic;  -- Asserted when inctruction is I-type.
-  signal MemtoReg       : std_logic;
-  signal RegWrite       : std_logic;
+  signal ALU_ctrl	        : std_logic_vector(2 downto 0);
+  signal opcode	        	: std_logic_vector(5 downto 0);  -- opcode part of instruction
+  signal ex_mux		        : std_logic_vector(1 downto 0);  -- [RegDst, ALUSrc]
+  signal opcode_is_i_type       : std_logic;  -- Asserted when inctruction is I-type.
+  signal opcode_is_r_type       : std_logic;  -- Asserted when inctruction is I-type.
+  signal MemtoReg               : std_logic;
+  signal RegWrite               : std_logic;
   
 begin  -- Behavioral
 -------------------------------------------------------------------------------
@@ -99,12 +99,3 @@ begin  -- Behavioral
   ex_instr <= ALU_ctrl & (opcode_is_i_type, opcode_is_i_type);
   opcode <= instruction(INST_WIDTH-1 downto INST_WIDTH-6);
 end Behavioral;
-
-
--- 000000
--- 010000
--- 010001
--- 010010
--- 010011
--- 000011
--- 000010

@@ -10,6 +10,8 @@ entity control_pipe is
   port (
     clk         	: in std_logic;
     rst         	: in std_logic;
+    stall               : in std_logic;
+    proc_enable         : in std_logic;
     instruction 	: in std_logic_vector(INST_WIDTH-1 downto 0);
 	
     MEM_WB_MemtoReg     : out std_logic;
@@ -35,6 +37,11 @@ end control_pipe;
 architecture Behavioral of control_pipe is
 
 --From decoder
+signal if_id_id_instr_in   : std_logic_vector(1 downto 0);	 --Branch, Jump
+signal if_id_wb_instr_in   : std_logic_vector(1 downto 0);  --MemtoReg, RegWrite       
+signal if_id_mem_instr_in  : std_logic_vector(2 downto 0);  --Memory write enable, ImmtoReg
+signal if_id_ex_instr_in   : std_logic_vector(4 downto 0);  --ALUop, RegDst, ALUSrc
+  
 signal if_id_id_instr	: std_logic_vector(1 downto 0);	 --Branch, Jump
 signal if_id_wb_instr   : std_logic_vector(1 downto 0);  --MemtoReg, RegWrite       
 signal if_id_mem_instr  : std_logic_vector(2 downto 0);  --Memory write enable, ImmtoReg
@@ -47,6 +54,7 @@ signal id_ex_mem_out	: std_logic_vector(2 downto 0); --PARTLY DELAYED:MemRead, M
 signal mem_wb_wb_out	: std_logic_vector(1 downto 0); --FULLY DELAYED: MemtoReg, RegWrite        
 signal ex_mem_mem_out	: std_logic_vector(2 downto 0); --FULLY DELAYED: MemRead, MemWrite, ImmtoReg 
 signal if_id_ex_out	: std_logic_vector(4 downto 0); --FULLY DELAYED: ALUop, RegDst, ALUSrc
+signal NOP : std_logic;                 -- No operation
 
 begin  -- Behavioral
 -------------------------------------------------------------------------------
@@ -55,11 +63,19 @@ begin  -- Behavioral
       INST_WIDTH => INST_WIDTH)
     port map (
       instruction => instruction,
-      wb_instr    => if_id_wb_instr ,
-      mem_instr   => if_id_mem_instr,
-      ex_instr    => if_id_ex_instr ,
-      id_instr	  => if_id_id_instr);
+      wb_instr    => if_id_wb_instr_in ,
+      mem_instr   => if_id_mem_instr_in,
+      ex_instr    => if_id_ex_instr_in ,
+      id_instr	  => if_id_id_instr_in );
 
+--No operation "multiplexer".
+  NOP <= stall or not proc_enable;
+  if_id_wb_instr  <= if_id_wb_instr_in  and (not NOP, not NOP);   
+  if_id_mem_instr <= if_id_mem_instr_in and (not NOP, not NOP, not NOP);   
+  if_id_ex_instr  <= if_id_ex_instr_in  and (not NOP, not NOP, not NOP, not NOP, not NOP);   
+  if_id_id_instr  <= if_id_id_instr_in  and (not NOP, not NOP);   
+  
+  
 -------------------------------------------------------------------------------
 -- ID DELAY (0 clk)
   IF_ID_Branch <= if_id_id_instr(1);
