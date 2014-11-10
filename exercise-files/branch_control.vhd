@@ -20,18 +20,6 @@ entity branch_control is
     branch_mux 	: out std_logic
     ); 
 
-  -------------------------------------------------------------------------------
-  --From synopsis std_logic_misc package.
-  function OR_REDUCE(ARG: STD_LOGIC_VECTOR) return UX01 is
-    variable result: STD_LOGIC;
-  begin
-    result := '0';
-    for i in ARG'range loop
-      result := result or ARG(i);
-    end loop;
-    return result;
-  end;
--------------------------------------------------------------------------------  
 end branch_control;
 
 architecture behavioral of branch_control is
@@ -41,7 +29,6 @@ signal equal : std_logic;               --Asserted if rt == rs
 begin  -- behavioral
 
   equal 		<= '1' when (signed(rt_in) = signed(rs_in)) else '0';
-  --equal <= NOT or_reduce(rt_in XOR rs_in);
   branch_mux 	<= equal AND ctrl_branch;
   addr_out	 	<= std_logic_vector(signed(addr_in) + signed(imm_in));
   

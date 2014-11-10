@@ -37,19 +37,21 @@ begin
           "001"       	when FUNCT_OR,
           "111"         when FUNCT_SLT,
           "110" 	when FUNCT_SUB,
-          "000" 	when OTHERS;
+          "010" 	when OTHERS;
 
+        
         with ALU_op select
-          opcod_sel <= 
+          ALU_Out <= 
           "010"         when IFUNCT_ADDI,
           "000"         when IFUNCT_ANDI,
           "001"         when IFUNCT_ORI ,
           "111"         when IFUNCT_SLTI,
+          funct_sel    	when "000000",
           "010"         when OTHERS;
           
-	with ALU_op select
-          ALU_Out <=
-          funct_sel 	when "000000", 
-          opcod_sel 	when others; 
+--	with ALU_op select
+--          ALU_Out <=
+--          funct_sel 	when "000000", 
+--          opcod_sel 	when others; 
 
 end Behavioral;

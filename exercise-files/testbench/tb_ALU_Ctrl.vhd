@@ -125,6 +125,17 @@ begin
   wait for 1ns;
   assert ALU_Out = "111" report "Unexpected value at ALU_Out." severity error;
 -------------------------------------------------------------------------------
+  ALU_op <= "100011";
+  funct <= "000001";
+  wait for 1ns;
+  funct <= "000010";
+  wait for 1ns;
+  ALU_op <= "000000";
+  funct <= "100000";
+  wait for 1ns;
+  ALU_op <= "000100";
+  funct <= "000010";
+  
   assert false report "Finished tb_ALU_Ctrl" severity note;
   wait;
 end process;

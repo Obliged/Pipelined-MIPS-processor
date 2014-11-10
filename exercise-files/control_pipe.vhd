@@ -12,6 +12,7 @@ entity control_pipe is
     rst         	: in std_logic;
     stall               : in std_logic;
     proc_enable         : in std_logic;
+    flush_delayed         : in std_logic;
     instruction 	: in std_logic_vector(INST_WIDTH-1 downto 0);
 	
     MEM_WB_MemtoReg     : out std_logic;
@@ -69,7 +70,7 @@ begin  -- Behavioral
       id_instr	  => if_id_id_instr_in );
 
 --No operation "multiplexer".
-  NOP <= stall or not proc_enable;
+  NOP <= stall or not proc_enable or flush_delayed;
   if_id_wb_instr  <= if_id_wb_instr_in  and (not NOP, not NOP);   
   if_id_mem_instr <= if_id_mem_instr_in and (not NOP, not NOP, not NOP);   
   if_id_ex_instr  <= if_id_ex_instr_in  and (not NOP, not NOP, not NOP, not NOP, not NOP);   
