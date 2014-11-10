@@ -13,6 +13,7 @@ entity control_pipe is
     stall               : in std_logic;
     proc_enable         : in std_logic;
     instruction 	: in std_logic_vector(INST_WIDTH-1 downto 0);
+	stall			: in std_logic;
 	
     MEM_WB_MemtoReg     : out std_logic;
 	
@@ -52,7 +53,7 @@ signal ex_mem_wb_out	: std_logic_vector(1 downto 0); --PARTLY DELAYED:MemtoReg, 
 signal id_ex_mem_out	: std_logic_vector(2 downto 0); --PARTLY DELAYED:MemRead, MemWrite, ImmtoReg 
 
 signal mem_wb_wb_out	: std_logic_vector(1 downto 0); --FULLY DELAYED: MemtoReg, RegWrite        
-signal ex_mem_mem_out	: std_logic_vector(2 downto 0); --FULLY DELAYED: MemRead, MemWrite, ImmtoReg 
+signal ex_mem_mem_out	: std_logic_vector(1 downto 0); --FULLY DELAYED: MemWrite, ImmtoReg 
 signal if_id_ex_out	: std_logic_vector(4 downto 0); --FULLY DELAYED: ALUop, RegDst, ALUSrc
 signal NOP : std_logic;                 -- No operation
 
@@ -120,11 +121,11 @@ begin  -- Behavioral
   mem_delay_2: entity work.pipe_delay(behavioural)
    generic map (
      DELAY     => 1,
-     REG_WIDTH => 3)
+     REG_WIDTH => 2)
    port map (
      clk      => clk,
      rst      => rst,
-     pipe_in  => id_ex_mem_out,
+     pipe_in  => id_ex_mem_out(1 downto 0),
      pipe_out => ex_mem_mem_out);
 
   EX_MEM_MemWrite	<= ex_mem_mem_out(1);

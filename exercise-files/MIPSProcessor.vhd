@@ -96,15 +96,16 @@ architecture Behavioral of MIPSProcessor is
 	signal stall				: std_logic;
 	
   --Internals
-	signal RegDst_mux			: std_logic_vector(REG_ADDR_WIDTH-1 downto 0);
-	signal PC_out				: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Output of PC.
-	signal PC_new				: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
-	signal PC_incremented		: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Output of PC.
-	signal PC_branch			: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
-	signal PC_update			: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
-	signal branch_or_iterate	: std_logic_vector(ADDR_WIDTH-1 downto 0);
-	signal jump_addr			: std_logic_vector(ADDR_WIDTH-1 downto 0);
-	signal ALU_or_dmem			: std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal RegDst_mux					: std_logic_vector(REG_ADDR_WIDTH-1 downto 0);
+	signal PC_out						: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Output of PC.
+	signal PC_new						: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
+	signal PC_incremented_or_stalled	: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Output of PC.
+	signal PC_branch					: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
+	signal PC_update					: std_logic_vector(ADDR_WIDTH-1 downto 0);  -- Updated PC value
+	signal branch_or_iterate			: std_logic_vector(ADDR_WIDTH-1 downto 0);
+	signal jump_addr					: std_logic_vector(ADDR_WIDTH-1 downto 0);
+	signal ALU_or_dmem					: std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal rt_forward_mux				: std_logic_vector(DATA_WIDTH-1 downto 0);
 	
   
 begin
@@ -114,8 +115,8 @@ begin
     generic map (
 	DATA_WIDTH => DATA_WIDTH)
     port map (
-		rt        => id_ex_rt_read,
-		rs        => id_ex_rs_read,
+		rt        => rt,
+		rs        => rs,
 		ALUctrl   => ID_EX_ALUop,
 		ALUresult => ALUresult);
 
@@ -145,6 +146,7 @@ begin
     )
 	port map (
 		clk				=> clk,	
+		branch_taken	=> branch_mux,
 		PC_in			=> PC_incremented,
 		instruction_in	=> imem_data_in,
 		PC_out			=> if_id_pc,
@@ -222,6 +224,7 @@ begin
                 stall       => stall,
                 proc_enable => processor_enable,
 		instruction => if_id_instruction,
+
 		
 		MEM_WB_MemtoReg => MEM_WB_MemtoReg,
 		
@@ -297,7 +300,7 @@ begin
    id_ex_rt_addr	when '1',
    (others => 'X')	when others;
 
---ALU rt input MUX
+--ALU rs input MUX
 with forward_a select
   rs <=
   id_ex_rs_read		when "00",
@@ -305,18 +308,25 @@ with forward_a select
   ALU_or_dmem		when "01",
   (others => 'X')	when others;
   
---ALU rs input MUX
+--Input mux for 2nd ALU input
 with forward_b select
-  rt <=
+  rt_forward_mux <=
   id_ex_rt_read		when "00",
   ex_mem_ALU_result	when "10",
   ALU_or_dmem		when "01",
   (others => 'X')	when others;
   
+--ALU rt input MUX
+with ID_EX_ALUSrc select
+  rt <=
+  rt_forward_mux	 when '0',
+  id_ex_sign_ext_imm when '1',
+  (others => 'X')	when others;
+  
 -- Branch or PC+1 MUX
 with branch_mux select
   branch_or_iterate <=
-  PC_incremented	when '0',
+  PC_incremented_or_stalled	when '0',
   PC_branch		when '1',
   --IMM is larger than address-space. Using bottom least significant bits,
   --assuming that most significant bits will be sign extension.
@@ -343,6 +353,12 @@ with EX_MEM_ImmtoReg select
   imem_data_in(15 downto 0) & x"0000" when '1',
   (others => 'X') when others;
 
+-- Stall PC mux
+with stall select -- Only increment PC if no stall
+  PC_incremented_or_stalled <=
+  PC_out when '1',
+  std_logic_vector(signed(PC_out) + 1) when '0'; 
+ 
 -------------------------------------------------------------------------------  
   --Updates of instruction address is clocked.
   PC: process(clk, reset)
@@ -358,13 +374,12 @@ with EX_MEM_ImmtoReg select
     end if;
   end process;
 -------------------------------------------------------------------------------
-  ALUctrl <= ID_EX_ALUop(2 downto 0);       --ALU_Out is wider to open for expansion.
 
   
   --Dmem and PC
   dmem_write_enable <= EX_MEM_MemWrite;
   dmem_address <= ex_mem_ALU_result(ADDR_WIDTH-1 downto 0);  --Size of dmem is small.
-  PC_incremented <= std_logic_vector(signed(PC_out) + 1);
+  
   jump_addr <= imem_data_in(ADDR_WIDTH-1 downto 0); -- & PC_out(31 downto 26);
                                                     -- --Address space is
                                                     -- smaller than imm    
