@@ -13,7 +13,6 @@ entity control_pipe is
     stall               : in std_logic;
     proc_enable         : in std_logic;
     instruction 	: in std_logic_vector(INST_WIDTH-1 downto 0);
-	stall			: in std_logic;
 	
     MEM_WB_MemtoReg     : out std_logic;
 	

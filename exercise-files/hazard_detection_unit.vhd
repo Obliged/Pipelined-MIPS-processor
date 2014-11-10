@@ -31,7 +31,7 @@ begin
 	
 		if(rst = '1') then
 			stall <= '0';
-		elsif(falling_edge(clk)) then
+		elsif(rising_edge(clk)) then
 			if((id_ex_mem_read = '1') AND ((id_ex_register_rt = if_id_register_rs) OR (id_ex_register_rt = if_id_register_rt))) then 
 				stall <= '1';
 			else 

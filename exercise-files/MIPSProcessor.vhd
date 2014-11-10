@@ -146,12 +146,11 @@ begin
     )
 	port map (
 		clk				=> clk,	
-		branch_taken	=> branch_mux,
-		PC_in			=> PC_incremented,
-		instruction_in	=> imem_data_in,
-		PC_out			=> if_id_pc,
-		instruction_out	=> if_id_instruction
-	);
+		--branch_taken	=> branch_mux,
+		PC_in			=> PC_incremented_or_stalled,
+		PC_out			=> if_id_pc
+
+);
 	
 -----------------------------------------------------------------------------
   --instantiate pipeline register ID/EX
@@ -205,14 +204,13 @@ begin
     )
 	port map (
 		clk					=> clk,	
-		mem_data_in			=> dmem_data_in,
 		ALU_result_in		=> ex_mem_ALU_result,
 		rd_addr_in			=> ex_mem_rd_addr,
 		
-		mem_data_out		=> mem_wb_mem_data,
 		ALU_result_out		=> mem_wb_ALU_result,
 		rd_addr_out			=> mem_wb_rd_addr
 	);
+	
   -----------------------------------------------------------------------------
   --instantiate Control
 	Control: entity work.control_pipe(behavioral)
@@ -359,13 +357,19 @@ with stall select -- Only increment PC if no stall
   PC_out when '1',
   std_logic_vector(signed(PC_out) + 1) when '0'; 
  
+with branch_mux select
+  if_id_instruction <= 
+  x"00000000" when '0',
+  imem_data_in when '1',
+  (others => 'X') when others;
+ 
 -------------------------------------------------------------------------------  
   --Updates of instruction address is clocked.
   PC: process(clk, reset)
   begin
     if reset = '1' then
       imem_address <= (others => '0');
-      PC_out <= (others => '0');
+      PC_out <= x"FF";--(others => '0');
     elsif rising_edge(clk) then
       if processor_enable = '1' then
         imem_address <= PC_new;
@@ -379,7 +383,8 @@ with stall select -- Only increment PC if no stall
   --Dmem and PC
   dmem_write_enable <= EX_MEM_MemWrite;
   dmem_address <= ex_mem_ALU_result(ADDR_WIDTH-1 downto 0);  --Size of dmem is small.
-  
+  mem_wb_mem_data <= dmem_data_in; -- Data memory already clocked on output. No need for delay in MEM/WB registers.
+  if_id_instruction <= imem_data_in; -- Data memory already clocked on output. No need for delay in MEM/WB registers.
   jump_addr <= imem_data_in(ADDR_WIDTH-1 downto 0); -- & PC_out(31 downto 26);
                                                     -- --Address space is
                                                     -- smaller than imm    
