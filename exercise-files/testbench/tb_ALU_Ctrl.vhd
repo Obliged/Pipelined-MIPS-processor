@@ -102,7 +102,7 @@ begin
 
   ALU_op <= "00" & x"0";
   wait for 1ns;
-  assert ALU_Out = "000" report "Unexpected value at ALU_Out." severity error;
+  assert ALU_Out = "010" report "Unexpected value at ALU_Out." severity error;
 -------------------------------------------------------------------------------
 
   
