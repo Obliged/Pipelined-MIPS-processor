@@ -48,10 +48,5 @@ begin
           "111"         when IFUNCT_SLTI,
           funct_sel    	when "000000",
           "010"         when OTHERS;
-          
---	with ALU_op select
---          ALU_Out <=
---          funct_sel 	when "000000", 
---          opcod_sel 	when others; 
 
 end Behavioral;

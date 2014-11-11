@@ -30,7 +30,6 @@ begin  -- behavioural
   ADDout <= std_logic_vector(signed(rs) + signed(rt));
   SUBout <= std_logic_vector(signed(rs) - signed(rt));
   SLTout <= x"00000001" when (signed(rs) < signed(rt)) else x"00000000";
-  --zero <= not or_reduce(ADDout);  --or ADDout supported in VHDL2008
   
 --Output Mux
   with ALUctrl(1 downto 0) select

@@ -12,8 +12,6 @@ entity Hazard_detection_unit is
 		REG_ADDR_WIDTH : natural := 5);
 
 	Port(
-		clk					: in STD_LOGIC;
-		rst					: in STD_LOGIC;
 		id_ex_mem_read		: in STD_LOGIC;
 		id_ex_register_rt	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
 		if_id_register_rs	: in STD_LOGIC_VECTOR (REG_ADDR_WIDTH-1 downto 0);
@@ -29,20 +27,4 @@ begin
               AND ((id_ex_register_rt = if_id_register_rs)
               OR (id_ex_register_rt = if_id_register_rt)))
           else '0';
-  
-	--process (clk, rst) is
-	
-	--begin
-	
-	--	if(rst = '1') then
-	--		stall <= '0';
-	--	elsif(rising_edge(clk)) then
-	--		if((id_ex_mem_read = '1') AND ((id_ex_register_rt = if_id_register_rs) OR (id_ex_register_rt = if_id_register_rt))) then 
-	--			stall <= '1';
-	--		else 
-	--			stall <= '0';
-	--		end if;
-	--	end if;
-	
-	--end process;
 end Behavioral;

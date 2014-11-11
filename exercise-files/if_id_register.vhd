@@ -7,11 +7,8 @@ entity if_id is
 			 );
 	port(
           clk			: in std_logic;
-		--branch_taken	: in std_logic;
-		sig_in			: in std_logic;
-		--instruction_in	: in std_logic_vector(INST_WIDTH-1 downto 0);  
+		sig_in			: in std_logic;  
 		sig_out			: out std_logic
-		--instruction_out	: out std_logic_vector(INST_WIDTH-1 downto 0)
 		); 		
 end if_id;
 

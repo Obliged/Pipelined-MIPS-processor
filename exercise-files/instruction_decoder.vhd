@@ -37,7 +37,6 @@ architecture Behavioral of instruction_decoder is
   signal opcode_is_r_type       : std_logic;  -- Asserted when inctruction is I-type.
   signal MemtoReg               : std_logic;
   signal RegWrite               : std_logic;
-  --signal ALUSrc                 : std_logic;
   
 begin  -- Behavioral
 -------------------------------------------------------------------------------
@@ -62,20 +61,6 @@ begin  -- Behavioral
     "10" when OPCODE_BEQ,
     "00" when others;
 
-  
-  --with opcode select                    
-  --  wb_instr <=       --[MemtoReg, RegWrite]
-  --  --write from mem to Reg
-  --  "11" when OPCODE_LW,
-  --  --Write from ALU to Reg
-  --  "01" when OPCODE_R_TYPE,
-  --  "01" when OPCODE_LUI,
-  --  "01" when IFUNCT_ADDI,
-  --  "01" when IFUNCT_ANDI,
-  --  "01" when IFUNCT_ORI ,
-  --  "01" when IFUNCT_SLTI,
-  --  --Don't write reg
-  --  "00" when others;
   MemtoReg <= '1' when opcode = OPCODE_LW else '0';
   RegWrite <= '1' when (opcode_is_r_type = '1')
               or ((opcode_is_i_type = '1') and
@@ -84,20 +69,11 @@ begin  -- Behavioral
   wb_instr <= (MemtoReg, RegWrite);
 
 
- -- with opcode_i_type select
- --  ex_mux <=              -- [RegDst, imm_or_rt]
- --   "11" when '1',
- --   "00" when others;
-
   opcode_is_i_type <= '0' when
                       ((opcode(5 downto 2) = "0100")
                       or (opcode(5 downto 1) = "00001")
                       or (opcode_is_r_type = '1')) --or all zeros
                       else '1'; 
-
-  --ALUSrc <= '1' when ((opcode_is_i_type = '1') and
-  --                ((opcode /= OPCODE_BEQ) and (opcode /= OPCODE_SW)))
-  --          else '0';
   
   opcode_is_r_type <= '1' when opcode = OPCODE_R_TYPE else '0';
     
