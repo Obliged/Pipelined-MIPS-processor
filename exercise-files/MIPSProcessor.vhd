@@ -49,7 +49,8 @@ architecture Behavioral of MIPSProcessor is
 	signal wr_data			: std_logic_vector(DATA_WIDTH-1 downto 0);
   
   --Control signals
-  
+
+        signal if_id_processor_enable   : std_logic;
 	signal IF_ID_Branch		: std_logic;
 	signal IF_ID_Jump		: std_logic;
 	signal ID_EX_RegDst		: std_logic;
@@ -60,7 +61,7 @@ architecture Behavioral of MIPSProcessor is
 	signal ID_EX_ALUSrc		: std_logic;
 	signal EX_MEM_RegWrite	: std_logic;
 	signal MEM_WB_RegWrite	: std_logic;
-	signal EX_MEM_ImmtoReg	: std_logic;
+	signal ex_mem_ImmtoReg	: std_logic;
 
   --Branch control signals
 	signal branch_mux			:std_logic;
@@ -81,9 +82,10 @@ architecture Behavioral of MIPSProcessor is
   --EX/MEM out signals
 	signal ex_mem_branch_target	: std_logic_vector(IADDR_WIDTH-1 downto 0);
 	signal ex_mem_ALU_result	: std_logic_vector(DATA_WIDTH-1 downto 0);
-	signal ex_mem_rt_read		: std_logic_vector(DATA_WIDTH-1 downto 0);
+	signal ex_mem_rt		: std_logic_vector(DATA_WIDTH-1 downto 0);
 	signal ex_mem_rd_addr		: std_logic_vector(REG_ADDR_WIDTH-1 downto 0);
-	
+        signal ex_mem_signshift : std_logic_vector(DATA_WIDTH-1 downto 0);
+        
   --MEM/WB out signals
 	signal mem_wb_mem_data		: std_logic_vector(DATA_WIDTH-1 downto 0);
 	signal mem_wb_ALU_result	: std_logic_vector(DATA_WIDTH-1 downto 0);
@@ -107,7 +109,9 @@ architecture Behavioral of MIPSProcessor is
 	signal jump_addr					: std_logic_vector(ADDR_WIDTH-1 downto 0);
 	signal ALU_or_dmem					: std_logic_vector(DATA_WIDTH-1 downto 0);
 	signal rt_forward_mux				: std_logic_vector(DATA_WIDTH-1 downto 0);
-	
+        signal id_ex_imm : std_logic_vector(15 downto 0);
+        signal EX_MEM_imm : std_logic_vector(15 downto 0);
+        signal mem_wb_imm : std_logic_vector(15 downto 0);
   
 begin
 -----------------------------------------------------------------------------
@@ -146,10 +150,10 @@ begin
     ADDR_WIDTH => ADDR_WIDTH
     )
 	port map (
-		clk				=> clk,	
+    		clk => clk,	
 		--branch_taken	=> branch_mux,
-		PC_in			=> if_PC_incremented_or_stalled,
-		PC_out			=> if_id_pc
+		sig_in			=> not processor_enable,
+		sig_out			=> if_id_processor_enable
 
 );
 	
@@ -176,6 +180,8 @@ begin
 		rd_addr_out			=> id_ex_rd_addr,
 		sign_ext_imm_out	=> id_ex_sign_ext_imm
 	);
+
+  id_ex_imm <= id_ex_sign_ext_imm(15 downto 0);
 	
 -----------------------------------------------------------------------------
   --instantiate pipeline register EX/MEM
@@ -188,12 +194,14 @@ begin
 	port map (
 		clk					=> clk,	
 		ALU_result_in		=> ALUresult,
-		rt_read_in			=> id_ex_rt_read,
+		rt_read_in			=> rt_forward_mux,
 		rd_addr_in			=> RegDst_mux,
+                id_ex_imm => id_ex_imm,
 		
 		ALU_result_out		=> ex_mem_ALU_result,
-		rt_read_out			=> ex_mem_rt_read,
-		rd_addr_out			=> ex_mem_rd_addr
+		rt_read_out			=> ex_mem_rt,
+		rd_addr_out			=> ex_mem_rd_addr,
+                ex_mem_imm  => ex_mem_imm
 	);
 	
 -----------------------------------------------------------------------------
@@ -205,11 +213,13 @@ begin
     )
 	port map (
 		clk					=> clk,	
-		ALU_result_in		=> ex_mem_ALU_result,
+		ALU_result_in		=> ex_mem_signshift,
 		rd_addr_in			=> ex_mem_rd_addr,
+                ex_mem_imm  => ex_mem_imm,
 		
 		ALU_result_out		=> mem_wb_ALU_result,
-		rd_addr_out			=> mem_wb_rd_addr
+		rd_addr_out			=> mem_wb_rd_addr,
+                mem_wb_imm => mem_wb_imm
 	);
 	
   -----------------------------------------------------------------------------
@@ -222,7 +232,7 @@ begin
 		rst         => reset,
                 stall       => stall,
                 flush_delayed => branch_mux_delayed,
-                proc_enable => processor_enable,
+                proc_enable => if_id_processor_enable,
 		instruction => if_id_instruction,
 
 		
@@ -242,7 +252,7 @@ begin
 		ID_EX_RegDst    => ID_EX_RegDst,
 		ID_EX_ALUSrc    => ID_EX_ALUSrc,
 		
-		EX_MEM_ImmtoReg => EX_MEM_ImmtoReg
+		ex_mem_ImmtoReg => ex_MEM_ImmtoReg
 	);
 
   -----------------------------------------------------------------------------
@@ -254,7 +264,7 @@ begin
     IADDR_WIDTH	=> IADDR_WIDTH)
 	port map (
 		ctrl_branch => IF_ID_Branch,
-		imm_in		=> id_ex_sign_ext_imm(IMM_WIDTH-1 downto 0),
+		imm_in		=> if_id_instruction(7 downto 0),
 		rs_in		=> rs_read,
 		rt_in		=> rt_read,
 		addr_in		=> if_id_pc,
@@ -304,7 +314,7 @@ begin
 with forward_a select
   rs <=
   id_ex_rs_read		when "00",
-  ex_mem_ALU_result	when "10",
+  ex_mem_signshift	when "10",
   ALU_or_dmem		when "01",
   (others => 'X')	when others;
   
@@ -312,7 +322,7 @@ with forward_a select
 with forward_b select
   rt_forward_mux <=
   id_ex_rt_read		when "00",
-  ex_mem_ALU_result	when "10",
+  ex_mem_signshift	when "10",
   ALU_or_dmem		when "01",
   (others => 'X')	when others;
   
@@ -320,13 +330,14 @@ with forward_b select
 with ID_EX_ALUSrc select
   rt <=
   rt_forward_mux	 when '0',
-  id_ex_sign_ext_imm when '1',
+  id_ex_sign_ext_imm    when '1',
   (others => 'X')	when others;
   
 -- Branch or PC+1 MUX
 with branch_mux select
   branch_or_iterate <=
-  if_id_PC	                when '0',
+  if_PC_incremented_or_stalled when '0',
+  --if_id_PC	                when '0',
   PC_branch		        when '1',
   --IMM is larger than address-space. Using bottom least significant bits,
   --assuming that most significant bits will be sign extension.
@@ -346,18 +357,25 @@ with MEM_WB_MemtoReg select
   mem_wb_mem_data	when '1',
   (others => 'X') when others;
 
+  wr_data <= ALU_or_dmem;
 -- Load Imm Mux			--Obsolete if rs=0 => imm can propagate through ALU?
-with EX_MEM_ImmtoReg select
-  wr_data <=
-  ALU_or_dmem                         when '0',
-  imem_data_in(15 downto 0) & x"0000" when '1',
-  (others => 'X') when others;
-
+--with MEM_wb_ImmtoReg select
+--  wr_data <=
+--  ALU_or_dmem                         when "0",
+--  ALU_or_dmem(15 downto 0) & x"0000" when "1",
+--  (others => 'X') when others;
+with ex_mem_immtoreg select
+  ex_mem_signshift <=
+  ex_mem_ALU_result              when '0',
+  ex_mem_ALU_result(15 downto 0) & x"0000" when '1';
+  
 -- Stall PC mux
 with stall select -- Only increment PC if no stall
   if_PC_incremented_or_stalled <=
-  PC_out when '1',
-  std_logic_vector(signed(PC_out) + 1) when '0'; 
+  if_id_PC when '1',
+  std_logic_vector(unsigned(if_id_PC) + 1) when '0'; 
+  --PC_out when '1',
+  --std_logic_vector(unsigned(PC_out) + 1) when '0'; 
 
 --with branch_mux select
 --  if_id_instruction_async <= 
@@ -370,27 +388,27 @@ if_id_instruction <= imem_data_in;
   begin
     if reset = '1' then
       --imem_address <= (others => '0');
-      PC_out <= (others => '1');
+      if_id_pc <= (0 => '0', others => '1');
     elsif rising_edge(clk) then
       if processor_enable = '1' then
         --imem_address <= PC_new;
-        PC_out <= PC_new;
+        if_id_pc <= PC_new;
         branch_mux_delayed <= branch_mux;
         --if_id_instruction <= if_id_instruction_async;
       end if;
     end if;
   end process;
 -------------------------------------------------------------------------------
-
-  imem_address <= PC_out;
+  --PC_out <= PC_new;
+  imem_address <= PC_new;
   --Dmem and PC
   dmem_write_enable <= EX_MEM_MemWrite;
-  dmem_address <= ex_mem_ALU_result(ADDR_WIDTH-1 downto 0);  --Size of dmem is small.
+  dmem_address <= ex_mem_signshift(ADDR_WIDTH-1 downto 0);  --Size of dmem is small.
   mem_wb_mem_data <= dmem_data_in; -- Data memory already clocked on output. No need for delay in MEM/WB registers.
   jump_addr <= imem_data_in(ADDR_WIDTH-1 downto 0); -- & PC_out(31 downto 26);
                                                     -- --Address space is
                                                     -- smaller than imm    
-  dmem_data_out <= ex_mem_rt_read;
+  dmem_data_out <= ex_mem_rt;
   
 end Behavioral;
 

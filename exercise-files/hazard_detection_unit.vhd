@@ -25,19 +25,24 @@ end Hazard_detection_unit;
 
 architecture Behavioral of Hazard_detection_unit is
 begin
-	process (clk, rst) is
+ stall <= '1' when ((id_ex_mem_read = '1')
+              AND ((id_ex_register_rt = if_id_register_rs)
+              OR (id_ex_register_rt = if_id_register_rt)))
+          else '0';
+  
+	--process (clk, rst) is
 	
-	begin
+	--begin
 	
-		if(rst = '1') then
-			stall <= '0';
-		elsif(rising_edge(clk)) then
-			if((id_ex_mem_read = '1') AND ((id_ex_register_rt = if_id_register_rs) OR (id_ex_register_rt = if_id_register_rt))) then 
-				stall <= '1';
-			else 
-				stall <= '0';
-			end if;
-		end if;
+	--	if(rst = '1') then
+	--		stall <= '0';
+	--	elsif(rising_edge(clk)) then
+	--		if((id_ex_mem_read = '1') AND ((id_ex_register_rt = if_id_register_rs) OR (id_ex_register_rt = if_id_register_rt))) then 
+	--			stall <= '1';
+	--		else 
+	--			stall <= '0';
+	--		end if;
+	--	end if;
 	
-	end process;
+	--end process;
 end Behavioral;

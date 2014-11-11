@@ -29,9 +29,10 @@ type RegisterFileType is array(0 to (2**ADDR_WIDTH)-1) of std_logic_vector(DATA_
 signal regFile : RegisterFileType ;
 
 begin
-  process (clk, rst, wr_en) is
+
+  write: process (clk, rst, wr_en) is
   begin
-    if rst = '1' then                   --NB! rst avtive high?
+    if rst = '1' then   
       regFile <= (others => (others => '0'));
     else
       if wr_en = '1' and rising_edge(clk) then  
@@ -39,8 +40,21 @@ begin
       end if;
     end if;
   end process;
-  -- data read, not clocked(!)
-  rs <= regFile(to_integer(unsigned(rs_addr)));
-  rt <= regFile(to_integer(unsigned(rt_addr)));
+
   
+  read: process (rs_addr, rt_addr, rd_addr, wr_en, wr_data) is
+  begin  -- process read
+    rs_forwarding: if (rs_addr = rd_addr) and wr_en = '1' then
+       rs <= wr_data;
+    else
+      rs <= regFile(to_integer(unsigned(rs_addr)));
+    end if;
+
+    rt_forwarding: if (rt_addr = rd_addr) and wr_en = '1' then
+      rt <= wr_data;
+    else
+      rt <= regFile(to_integer(unsigned(rt_addr)));
+    end if;
+  end process read;
+    
 end behavioural;

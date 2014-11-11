@@ -37,6 +37,7 @@ architecture Behavioral of instruction_decoder is
   signal opcode_is_r_type       : std_logic;  -- Asserted when inctruction is I-type.
   signal MemtoReg               : std_logic;
   signal RegWrite               : std_logic;
+  --signal ALUSrc                 : std_logic;
   
 begin  -- Behavioral
 -------------------------------------------------------------------------------
@@ -93,6 +94,10 @@ begin  -- Behavioral
                       or (opcode(5 downto 1) = "00001")
                       or (opcode_is_r_type = '1')) --or all zeros
                       else '1'; 
+
+  --ALUSrc <= '1' when ((opcode_is_i_type = '1') and
+  --                ((opcode /= OPCODE_BEQ) and (opcode /= OPCODE_SW)))
+  --          else '0';
   
   opcode_is_r_type <= '1' when opcode = OPCODE_R_TYPE else '0';
     

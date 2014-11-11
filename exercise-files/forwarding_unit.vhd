@@ -36,7 +36,6 @@ begin
 		
 		-- MEM hazard - set forward_a
 		elsif((mem_wb_reg_write = '1') AND (mem_wb_register_rd /= "00000") 
-		AND NOT((ex_mem_reg_write = '1') AND (ex_mem_register_rd /= "00000") AND (ex_mem_register_rd /= id_ex_register_rs)) 
 		AND (mem_wb_register_rd = id_ex_register_rs)) then 
 			forward_a <= "01";
 		
@@ -51,7 +50,7 @@ begin
 		
 		-- MEM hazard - set forward_b
 		elsif((mem_wb_reg_write = '1') AND (mem_wb_register_rd /= "00000") 
-		AND NOT((ex_mem_reg_write = '1') AND (ex_mem_register_rd /= "00000") AND (ex_mem_register_rd /= id_ex_register_rt)) 
+		AND NOT((ex_mem_reg_write = '1') AND (ex_mem_register_rd /= "00000") AND (ex_mem_register_rd = id_ex_register_rt)) 
 		AND (mem_wb_register_rd = id_ex_register_rt)) then 
 			forward_b <= "01";
 		

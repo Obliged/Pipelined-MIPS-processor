@@ -52,6 +52,8 @@ signal if_id_ex_instr   : std_logic_vector(4 downto 0);  --ALUop, RegDst, ALUSrc
 signal ex_mem_wb_out	: std_logic_vector(1 downto 0); --PARTLY DELAYED:MemtoReg, RegWrite  
 signal id_ex_mem_out	: std_logic_vector(2 downto 0); --PARTLY DELAYED:MemRead, MemWrite, ImmtoReg 
 
+--signal ex_mem_immtoreg : std_logic_vector(0 downto 0);
+
 signal mem_wb_wb_out	: std_logic_vector(1 downto 0); --FULLY DELAYED: MemtoReg, RegWrite        
 signal ex_mem_mem_out	: std_logic_vector(1 downto 0); --FULLY DELAYED: MemWrite, ImmtoReg 
 signal if_id_ex_out	: std_logic_vector(4 downto 0); --FULLY DELAYED: ALUop, RegDst, ALUSrc
@@ -70,7 +72,7 @@ begin  -- Behavioral
       id_instr	  => if_id_id_instr_in );
 
 --No operation "multiplexer".
-  NOP <= stall or not proc_enable or flush_delayed;
+  NOP <= stall or not proc_enable; --or flush_delayed;
   if_id_wb_instr  <= if_id_wb_instr_in  and (not NOP, not NOP);   
   if_id_mem_instr <= if_id_mem_instr_in and (not NOP, not NOP, not NOP);   
   if_id_ex_instr  <= if_id_ex_instr_in  and (not NOP, not NOP, not NOP, not NOP, not NOP);   
@@ -132,8 +134,16 @@ begin  -- Behavioral
   EX_MEM_ImmtoReg	<= ex_mem_mem_out(0);
 
 -------------------------------------------------------------------------------
-
-
+--immtoreg_wb_delay: entity work.pipe_delay(behavioural)
+--   generic map (
+--     DELAY     => 1,
+--     REG_WIDTH => 1)
+--   port map (
+--     clk      => clk,
+--     rst      => rst,
+--     pipe_in  => EX_MEM_ImmtoReg,
+--     pipe_out => MEM_WB_ImmtoReg);
+	
 --WB DELAY(3 clk)
 -------------------------------------------------------------------------------
 wb_delay_1: entity work.pipe_delay(behavioural)  --Forwarding needs RegWrite
