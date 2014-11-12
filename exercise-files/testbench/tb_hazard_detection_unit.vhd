@@ -15,23 +15,19 @@ ARCHITECTURE behavior OF tb_hazard_detection_unit IS
  
     COMPONENT Hazard_detection_unit
 	PORT(
-		clk : IN std_logic;
-		rst : IN std_logic;
 		id_ex_mem_read : IN std_logic;
-		id_ex_register_rt : IN std_logic_vector(31 downto 0);
-		if_id_register_rs : IN std_logic_vector(31 downto 0);
-		if_id_register_rt : IN std_logic_vector(31 downto 0);          
+		id_ex_register_rt : IN std_logic_vector(4 downto 0);
+		if_id_register_rs : IN std_logic_vector(4 downto 0);
+		if_id_register_rt : IN std_logic_vector(4 downto 0);          
 		stall : OUT std_logic
 		);
 	END COMPONENT;
 
    --Inputs
-   signal clk 				: std_logic := '0';
-   signal rst 				: std_logic := '0';
    signal id_ex_mem_read 	: std_logic;
-   signal id_ex_register_rt : std_logic_vector(31 downto 0);
-   signal if_id_register_rs : std_logic_vector(31 downto 0);
-   signal if_id_register_rt : std_logic_vector(31 downto 0);  
+   signal id_ex_register_rt : std_logic_vector(4 downto 0);
+   signal if_id_register_rs : std_logic_vector(4 downto 0);
+   signal if_id_register_rt : std_logic_vector(4 downto 0);  
 
 
  	--Outputs
@@ -42,9 +38,9 @@ ARCHITECTURE behavior OF tb_hazard_detection_unit IS
 	
 	TYPE data_table IS RECORD
 		id_ex_mem_read_col		: std_logic;
-		id_ex_register_rt_col 	: std_logic_vector(31 downto 0);
-		if_id_register_rs_col 	: std_logic_vector(31 downto 0);
-		if_id_register_rt_col 	: std_logic_vector(31 downto 0);
+		id_ex_register_rt_col 	: std_logic_vector(4 downto 0);
+		if_id_register_rs_col 	: std_logic_vector(4 downto 0);
+		if_id_register_rt_col 	: std_logic_vector(4 downto 0);
 		stall_col 				: std_logic;
 		
 	END RECORD;
@@ -53,42 +49,28 @@ ARCHITECTURE behavior OF tb_hazard_detection_unit IS
 
 	CONSTANT templates: table := (
 
-		('1',x"00000001", x"00000000", x"00000001", '1'), -- Stall		: id_ex_mem_read AND id_ex_register_rt = if_id_register_rt
-		('1',x"0A000000", x"00000000", x"00000000", '0'), -- No stall	: NOT((id_ex_register_rt = if_id_register_rs) OR (id_ex_register_rt = if_id_register_rt))
-		('0',x"00000000", x"000B0400", x"000B0400", '0'), -- No stall	: NOT(id_ex_mem_read)
-		('1',x"000000A0", x"000000A0", x"000000A0", '1'), -- Stall		: id_ex_mem_read AND id_ex_register_rt = if_id_register_rs AND id_ex_register_rt = if_id_register_rt
-		('0',x"00000000", x"00000000", x"00000000", '0'), -- No stall	: NOT(id_ex_mem_read)
-		('1',x"98761234", x"98761234", x"00000000", '1'));-- Stall		: id_ex_mem_read AND id_ex_register_rt = if_id_register_rs
+		('1',"00001", "00000", "00001", '1'), -- Stall		: id_ex_mem_read AND id_ex_register_rt = if_id_register_rt
+		('1',"10000", "00000", "00000", '0'), -- No stall	: NOT((id_ex_register_rt = if_id_register_rs) OR (id_ex_register_rt = if_id_register_rt))
+		('0',"00000", "10100", "10100", '0'), -- No stall	: NOT(id_ex_mem_read)
+		('1',"00010", "00010", "00010", '1'), -- Stall		: id_ex_mem_read AND id_ex_register_rt = if_id_register_rs AND id_ex_register_rt = if_id_register_rt
+		('0',"00000", "00000", "00000", '0'), -- No stall	: NOT(id_ex_mem_read)
+		('1',"11111", "11111", "00000", '1'));-- Stall		: id_ex_mem_read AND id_ex_register_rt = if_id_register_rs
 	 
 BEGIN
  
 	-- Instantiate the Unit Under Test (UUT)
    Hazard_detection_uut: Hazard_detection_unit PORT MAP(
-		clk => clk,
-		rst => rst,
 		id_ex_mem_read => id_ex_mem_read,
 		id_ex_register_rt => id_ex_register_rt,
 		if_id_register_rs => if_id_register_rs,
 		if_id_register_rt => if_id_register_rt,
 		stall => stall
 	);
-
-   -- Clock process definitions
-   clk_process :process
-   begin
-		clk <= '1';
-		wait for clk_period/2;
-		clk <= '0';
-		wait for clk_period/2;
-   end process;
  
 
    -- Stimulus process
    stim_proc: process
    begin
-		rst <= '1';
-      wait for 10*clk_period;	-- hold reset state for 10 clk period.
-		rst <= '0';
 		wait for 0.5*clk_period;
 		--wait until falling_edge(clk)
 		FOR i IN 1 to 6 LOOP  -- 
